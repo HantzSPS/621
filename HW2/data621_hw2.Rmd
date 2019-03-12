@@ -214,7 +214,57 @@ max(f.1)
 
 
 ## Q10
+```{r}
+roc <- function(df, actual, probab){
+ tr<-seq(0.01,1,0.01)
+ val_x<-vector()
+ val_y<-vector()
+ 
+ for (i in tr){
+   df["pred"]<-ifelse(df[probab]<i,0,1)
+ 
+   
+   spec <- function(df, actual, pred){
+     actual <- df[actual]
+     pred <- df[pred]
+     df_new <-  ifelse(actual==0 & pred==0, "TN",ifelse(actual==0 & pred==1, "FP",
+                                                ifelse(actual==1 & pred==0, "FN", "TP")))
+     conf <-table(df_new)
+     m_spec <- conf["TN"]/(conf["TN"]+conf["FP"])
+     return(as.numeric(m_spec))
+   }
+   
+   sens <- function(df, actual, pred){
+     actual <- df[actual]
+     pred <- df[pred]
+     df_new <-  ifelse(actual==0 & pred==0, "TN",ifelse(actual==0 & pred==1, "FP",
+                                                ifelse(actual==1 & pred==0, "FN", "TP")))
+     conf <-table(df_new)
+     m_sens <- conf["TP"]/(conf["TP"]+conf["FN"])
+     return(as.numeric(m_sens))
+}
 
+ 
+ val_x<-c(val_x, 1-spec(df, actual, "pred"))
+ val_y<-c(val_y, sens(df, actual, "pred"))
+ }
+ 
+ df_xy<-data.frame(val_x,val_y)
+ df_xy<-df_xy[complete.cases(df_xy),]
+ 
+ b<--diff(df_xy$val_x)
+ 
+ auc<-min(df_xy$val_x)*min(df_xy$val_y)/2 +
+   sum(b*df_xy$val_y[-length(df_xy$val_y)]) +
+   (1-max(df_xy$val_x))*max(df_xy$val_y)+
+   ((1-max(df_xy$val_x))*(1-max(df_xy$val_y))/2)
+ 
+ return(c(plot(val_y~val_x, df_xy, type="l",main="ROC Curve"), abline(0,1,lty=2),auc))
+ 
+}
+
+roc(df, "class","scored.probability")
+```
 
 
 
